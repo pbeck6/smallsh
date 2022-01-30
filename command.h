@@ -31,8 +31,10 @@ struct Command {
 };
 
 /* Function declarations */
+void destroyCmd(struct Command *);
 struct Command *initCmd(void);
-void parseCmd(char *);
+struct Command *parseCmd(char *);
+void printCmd(struct Command *);
 
 #endif
 //

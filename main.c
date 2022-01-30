@@ -15,7 +15,12 @@ int main() {
         // Set MAXLEN_CMD+2 for fgets() \n and \0
         line = fgets(command, MAXLEN_CMD+2, stdin);
         if (line != NULL) {
-            parseCmd(line);
+            struct Command *newCmd = parseCmd(line);
+
+
+            if (newCmd->cmd != NULL) {
+                destroyCmd(newCmd);
+            }
         }
     }
 
