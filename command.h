@@ -22,7 +22,7 @@
 #define MAXARGS_CMD 512
 
 /* struct for command */
-struct command {
+struct Command {
     char *cmd;
     char *args[MAXARGS_CMD]; 
     char *inputFile;
@@ -31,7 +31,8 @@ struct command {
 };
 
 /* Function declarations */
-void parseCmd (char *);
+struct Command *initCmd(void);
+void parseCmd(char *);
 
 #endif
 //

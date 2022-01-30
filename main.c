@@ -8,15 +8,13 @@ int main() {
     char command[MAXLEN_CMD+2];
 
     while (1) {
+        // Repeat command prompt
         printf("%s", prompt);
         fflush(stdout);
 
-        // Set MAXLEN_CMD+2 for fgets() newline and null-terminator
+        // Set MAXLEN_CMD+2 for fgets() \n and \0
         line = fgets(command, MAXLEN_CMD+2, stdin);
         if (line != NULL) {
-            // Strip newline from fgets(), maintain null-terminator
-            line[strlen(line)-1] = '\0';
-
             parseCmd(line);
         }
     }
