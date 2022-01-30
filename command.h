@@ -21,7 +21,17 @@
 #define MAXLEN_CMD 2048
 #define MAXARGS_CMD 512
 
+/* struct for command */
+struct command {
+    char *cmd;
+    char *args[MAXARGS_CMD]; 
+    char *inputFile;
+    char *outputFile;
+    int bg;
+};
+
 /* Function declarations */
+void parseCmd (char *);
 
 #endif
 //
