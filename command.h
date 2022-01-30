@@ -1,5 +1,5 @@
-#ifndef PARSE_H_
-#define PARSE_H_
+#ifndef COMMAND_H_
+#define COMMAND_H_
 
 // Use if --std=c99
 #define _GNU_SOURCE

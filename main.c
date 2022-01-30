@@ -1,5 +1,5 @@
 #include "shell.h"
-#include "parse.h"
+#include "command.h"
 
 int main() {
     int status;
@@ -13,6 +13,7 @@ int main() {
     while (1) {
         printf("%s", prompt);
         fflush(stdout);
+
         characters = getline(&command, &bufsize, stdin);
     }
 
