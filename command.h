@@ -32,6 +32,7 @@ struct Command {
 
 /* Function declarations */
 void destroyCmd(struct Command *);
+void expandDoubleDollar(char *, char *);
 struct Command *initCmd(void);
 struct Command *parseCmd(char *);
 void printCmd(struct Command *);

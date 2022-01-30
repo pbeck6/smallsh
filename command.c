@@ -18,10 +18,37 @@ void destroyCmd(struct Command *oldCmd) {
     free(oldCmd);
 }
 
+void expandDoubleDollar(char *line, char *res){
+    int i = 0;
+    int lineLen = strlen(line);
+    
+    // Convert pid to a string
+    pid_t processId = getpid();
+    int len = snprintf(NULL, 0, "%d", processId);
+    char *pidString = malloc(len+1);
+    snprintf(pidString, len+1, "%d", processId);
+
+    while (i < lineLen && strlen(res) < MAXLEN_CMD) {
+        // line[i+1] NOT out of index, will be '\0' at end
+        if (line[i] == '$' && line[i+1] == '$') {
+            // Expand $$ variable
+            strcat(res, pidString);
+            i++;
+        } else {
+            // Concatenate single char
+            strncat(res, &line[i], 1);
+        }
+        i++;
+    }
+
+    free(pidString);
+}
+
 struct Command *initCmd(void) {
     struct Command *newCmd = malloc(sizeof(struct Command));
 
     newCmd->cmd = NULL;
+    // Initialize to array of NULL char pointers
     for (int i = 0; i < MAXARGS_CMD; i++) {
         newCmd->args[i] = NULL;
     }
@@ -32,32 +59,38 @@ struct Command *initCmd(void) {
     return newCmd;
 }
 
-struct Command *parseCmd(char *line) {
+struct Command *parseCmd(char *oldLine) {
+    // Buffer for $$ expanded command str
+    char *line = calloc(MAXLEN_CMD+1, sizeof(char));
+
     // Define command struct
     struct Command *newCmd = initCmd();
     int argIndex = 0;
 
     // Strip newline from fgets(), maintain null-terminator
-    line[strlen(line)-1] = '\0';
+    oldLine[strlen(oldLine)-1] = '\0';
 
     // Ignore empty lines and comments
-    if (strlen(line) > 0 && line[0] != '#') {
+    if (strlen(oldLine) > 0 && oldLine[0] != '#') {
+        // Expand $$ variables, if any
+        expandDoubleDollar(oldLine, line);
+
         // The first token is the command
-        char *token = strtok(line, " ");
+        char *token = strsep(&line, " ");
         newCmd->cmd = calloc(strlen(token)+1, sizeof(char));
         strcpy(newCmd->cmd, token);
 
         // Read optional args
-        token = strtok(NULL, " ");
+        token = strsep(&line, " ");
         while (token != NULL) {
             // Arg for input_file
             if (strcmp(token, "<") == 0) {
-                token = strtok(NULL, " ");
+                token = strsep(&line, " ");
                 newCmd->inputFile = calloc(strlen(token)+1, sizeof(char));
                 strcpy(newCmd->inputFile, token);
             // Arg for output_file
             } else if (strcmp(token, ">") == 0) {
-                token = strtok(NULL, " ");
+                token = strsep(&line, " ");
                 newCmd->outputFile = calloc(strlen(token)+1, sizeof(char));
                 strcpy(newCmd->outputFile, token);
             // [arg 1, arg2, ...]
@@ -69,38 +102,52 @@ struct Command *parseCmd(char *line) {
             } else {
                 newCmd->bg = 1;
             }
-            // Check for EOF, reset bg if not
-            token = strtok(NULL, " ");
+            // Check for EOF
+            token = strsep(&line, " ");
+            // Reset bg if not EOF, add to arg array
             if (token != NULL && newCmd->bg == 1) {
+                char *regular = "&";
                 newCmd->bg = 0;
+                newCmd->args[argIndex] = calloc(strlen(regular)+1, sizeof(char));
+                strcpy(newCmd->args[argIndex], regular);
+                argIndex++;
             }
         }
     }
     printCmd(newCmd);
+
+    // Free buffer
+    free(line);
+    
     return newCmd;
 }
 
 void printCmd(struct Command *cmd) {
     if (cmd->cmd != NULL) {
         printf("Cmd %s of len %zu\n", cmd->cmd, strlen(cmd->cmd));
+        fflush(stdout);
     }
 
     for (int i = 0; i < MAXARGS_CMD; i++) {
         if (cmd->args[i] != NULL) {
             printf("Arg %s of len %zu\n", cmd->args[i], strlen(cmd->args[i]));
+            fflush(stdout);
         }
     }
 
     if (cmd->inputFile != NULL) {
         printf("Input %s of len %zu\n", cmd->inputFile, strlen(cmd->inputFile));
+        fflush(stdout);
     }
 
     if (cmd->outputFile != NULL) {
         printf("Output %s of len %zu\n", cmd->outputFile, strlen(cmd->outputFile));
+        fflush(stdout);
     }
 
     if (cmd->bg) {
         printf("Background activated.\n");
+        fflush(stdout);
     }
 }
 //
