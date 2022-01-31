@@ -17,7 +17,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "command.h"
+
 /* Function declarations */
+int execCmd(struct Command *, int);
 
 #endif
 //
