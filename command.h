@@ -24,9 +24,10 @@
 /* struct for command */
 struct Command {
     char *cmd;
-    char *args[MAXARGS_CMD]; 
+    char *args[MAXARGS_CMD];
     char *inputFile;
     char *outputFile;
+    int nArgs; 
     int bg;
 };
 

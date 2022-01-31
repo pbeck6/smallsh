@@ -54,6 +54,7 @@ struct Command *initCmd(void) {
     }
     newCmd->inputFile = NULL;
     newCmd->outputFile = NULL;
+    newCmd->nArgs = 0;
     newCmd->bg = 0;
 
     return newCmd;
@@ -97,6 +98,7 @@ struct Command *parseCmd(char *oldLine) {
             } else if (strcmp(token, "&") != 0){
                 newCmd->args[argIndex] = calloc(strlen(token)+1, sizeof(char));
                 strcpy(newCmd->args[argIndex], token);
+                newCmd->nArgs++;
                 argIndex++;
             // Potential [&] arg
             } else {
@@ -110,6 +112,7 @@ struct Command *parseCmd(char *oldLine) {
                 newCmd->bg = 0;
                 newCmd->args[argIndex] = calloc(strlen(regular)+1, sizeof(char));
                 strcpy(newCmd->args[argIndex], regular);
+                newCmd->nArgs++;
                 argIndex++;
             }
         }
