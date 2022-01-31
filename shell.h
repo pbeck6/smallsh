@@ -20,7 +20,9 @@
 #include "command.h"
 
 /* Function declarations */
+void changeDir(char *);
 int execCmd(struct Command *, int);
+void printStatus(int);
 
 #endif
 //
