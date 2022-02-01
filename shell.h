@@ -9,6 +9,7 @@
 void changeDir(char *);
 int execCmd(struct Command *, int);
 int execOther(struct Command *, int);
+void exitBackground(void);
 void printStatus(int);
 void redirectIO(char *, int);
 

@@ -17,8 +17,7 @@ int execCmd(struct Command *cmd, int status) {
     if (cmd->cmd != NULL) {
         // Built-in "exit"
         if (strcmp(cmd->cmd, "exit") == 0) {
-            //////////////////////WAIT FOR BG PROCS
-            exit(0);
+            exitBackground();
         // Built-in "status"
         } else if (strcmp(cmd->cmd, "status") == 0) {
             printStatus(status);
@@ -45,6 +44,7 @@ int execOther(struct Command *cmd, int status) {
     // Code modified from Module: Exec a New Program
  	int   childStatus;
 	pid_t childPid = fork();
+    char *nullFile = "/dev/null";
 
     switch (childPid){
     case -1:
@@ -56,11 +56,17 @@ int execOther(struct Command *cmd, int status) {
         // Handle input redirection
         if (cmd->inputFile != NULL) {
             redirectIO(cmd->inputFile, 0);
+        } else if (cmd->inputFile == NULL && cmd->bg == 1) {
+            // Default input for bg proc
+            redirectIO(nullFile, 0);
         }
 
         // Handle output redirection
         if (cmd->outputFile != NULL) {
             redirectIO(cmd->outputFile, 1);
+        } else if (cmd->outputFile == NULL && cmd->bg == 1) {
+            // Default output for bg proc
+            redirectIO(nullFile, 1);
         }
 
         // Execute program with args, if any
@@ -72,18 +78,31 @@ int execOther(struct Command *cmd, int status) {
         break;
     // spawnpid is child's pid in parent
     default:
-        childPid = waitpid(childPid, &childStatus, 0);
-        printf("Parent %d waiting done as child pid %d exited\n", getpid(), childPid);
-        fflush(stdout);
-        // Set child's termination status
-        if( WIFEXITED(childStatus) ){
-            status = WEXITSTATUS(childStatus);
-		} else {
-            status = WTERMSIG(childStatus);
-		}
+        // Run as foreground process
+        if (!cmd->bg) {
+            waitpid(childPid, &childStatus, 0);
+
+            ////////////////////////////////////////////////// DELETE
+            printf("Parent %d: child pid %d in group %d exited\n", getpid(), childPid, getpgrp());
+            fflush(stdout);
+            ////////////////////////////////////////////////// DELETE
+
+            // Set child's termination status
+            if( WIFEXITED(childStatus) ){
+                status = WEXITSTATUS(childStatus);
+            } else {
+                status = WTERMSIG(childStatus);
+            }
+        }
+        
         break;
     }
     return status;
+}
+
+void exitBackground(void) {
+    // Terminate every process in group, including parent process
+    kill(0, SIGTERM);
 }
 
 void printStatus(int status) {
@@ -118,3 +137,4 @@ void redirectIO(char *file, int std) {
         dup2(openFD, std);
     }
 }
+//
