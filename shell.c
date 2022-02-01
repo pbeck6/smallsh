@@ -34,10 +34,6 @@ int execCmd(struct Command *cmd, int status) {
 }
 
 int execOther(struct Command *cmd, int status) {
-    // Code modified from Module: Exec a New Program
- 	int   childStatus;
-	pid_t childPid = fork();
-
     // Build argv vector
     char *newargv[(cmd->nArgs)+2];
     newargv[0] = cmd->cmd;
@@ -46,6 +42,10 @@ int execOther(struct Command *cmd, int status) {
         newargv[i+1] = cmd->args[i];
     }
 
+    // Code modified from Module: Exec a New Program
+ 	int   childStatus;
+	pid_t childPid = fork();
+
     switch (childPid){
     case -1:
         perror("fork() failed!");
@@ -53,16 +53,43 @@ int execOther(struct Command *cmd, int status) {
         break;
     // spawnpid is 0 in child
     case 0:
+        // Handle input redirection
+        if (cmd->inputFile != NULL) {
+            int sourceFD = open(cmd->inputFile, O_RDONLY);
+            if (sourceFD == -1) { 
+		        printf("cannot open %s for input", cmd->inputFile);
+                fflush(stdout);
+		        exit(1); 
+	        } else {
+                // fd for stdin is 0
+                dup2(sourceFD, 0);
+            }
+        }
+
+        // Handle output redirection
+        if (cmd->outputFile != NULL) {
+            int targetFD = open(cmd->outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+            if (targetFD == -1) { 
+		        printf("cannot open %s for output", cmd->outputFile);
+                fflush(stdout);
+		        exit(1); 
+	        } else {
+                // fd for stdout is 1
+                dup2(targetFD, 1);
+            }
+        }
+
+        // Execute program with args, if any
         execvp(newargv[0], newargv);
 
         // execv() returns only on error
         perror("execv");
-        exit(2);
+        exit(1);
         break;
     // spawnpid is child's pid in parent
     default:
         childPid = waitpid(childPid, &childStatus, 0);
-        printf("Parent's waiting done as child pid %d exited\n", childPid);
+        printf("Parent %d waiting done as child pid %d exited\n", getpid(), childPid);
         fflush(stdout);
         // Set child's termination status
         if( WIFEXITED(childStatus) ){
