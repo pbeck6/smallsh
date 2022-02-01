@@ -55,19 +55,19 @@ int execOther(struct Command *cmd, int status) {
     case 0:
         // Handle input redirection
         if (cmd->inputFile != NULL) {
-            redirectInput(cmd->inputFile);
+            redirectIO(cmd->inputFile, 0);
         }
 
         // Handle output redirection
         if (cmd->outputFile != NULL) {
-            redirectOutput(cmd->outputFile);
+            redirectIO(cmd->outputFile, 1);
         }
 
         // Execute program with args, if any
         execvp(newargv[0], newargv);
 
         // execv() returns only on error
-        perror("execv");
+        printf("%s: no such file or directory\n", newargv[0]);
         exit(1);
         break;
     // spawnpid is child's pid in parent
@@ -96,26 +96,25 @@ void printStatus(int status) {
     }
 }
 
-void redirectInput(char *file) {
-    int sourceFD = open(file, O_RDONLY);
-    if (sourceFD == -1) { 
-        printf("cannot open %s for input\n", file);
-        fflush(stdout);
-        exit(1); 
+void redirectIO(char *file, int std) {
+    char *message = NULL;
+    int openFD;
+    // fd for stdin=0, stdout=1
+    if (std) {
+        message = "output";
+        openFD = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     } else {
-        // fd for stdin is 0
-        dup2(sourceFD, 0);
+        message = "input";
+        openFD = open(file, O_RDONLY);
     }
-}
 
-void redirectOutput(char *file) {
-    int targetFD = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (targetFD == -1) { 
-        printf("cannot open %s for output\n", file);
+    // Check if file opened correctly
+    if (openFD == -1) { 
+        printf("cannot open %s for %s\n", file, message);
         fflush(stdout);
         exit(1); 
     } else {
-        // fd for stdout is 1
-        dup2(targetFD, 1);
+        // Redirect I/O
+        dup2(openFD, std);
     }
 }

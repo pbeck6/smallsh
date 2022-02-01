@@ -10,8 +10,7 @@ void changeDir(char *);
 int execCmd(struct Command *, int);
 int execOther(struct Command *, int);
 void printStatus(int);
-void redirectInput(char *);
-void redirectOutput(char *);
+void redirectIO(char *, int);
 
 #endif
 //
