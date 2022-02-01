@@ -98,19 +98,19 @@ struct Command *parseCmd(char *oldLine) {
                 newCmd->args[newCmd->nArgs] = calloc(strlen(token)+1, sizeof(char));
                 strcpy(newCmd->args[newCmd->nArgs], token);
                 newCmd->nArgs++;
-            // Potential [&] arg
+            // Potential [&] for bg process
             } else {
                 newCmd->bg = 1;
+            }
+            // Check for EOF
+            token = strsep(&line, " ");
+            // Reset bg if not EOF, treat as arg
+            if (token != NULL && newCmd->bg == 1) {
+                newCmd->bg = 0;
                 char *regular = "&";
                 newCmd->args[newCmd->nArgs] = calloc(strlen(regular)+1, sizeof(char));
                 strcpy(newCmd->args[newCmd->nArgs], regular);
                 newCmd->nArgs++;
-            }
-            // Check for EOF
-            token = strsep(&line, " ");
-            // Reset bg if not EOF
-            if (token != NULL && newCmd->bg == 1) {
-                newCmd->bg = 0;
             }
         }
     }
