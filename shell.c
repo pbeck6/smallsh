@@ -55,28 +55,12 @@ int execOther(struct Command *cmd, int status) {
     case 0:
         // Handle input redirection
         if (cmd->inputFile != NULL) {
-            int sourceFD = open(cmd->inputFile, O_RDONLY);
-            if (sourceFD == -1) { 
-		        printf("cannot open %s for input", cmd->inputFile);
-                fflush(stdout);
-		        exit(1); 
-	        } else {
-                // fd for stdin is 0
-                dup2(sourceFD, 0);
-            }
+            redirectInput(cmd->inputFile);
         }
 
         // Handle output redirection
         if (cmd->outputFile != NULL) {
-            int targetFD = open(cmd->outputFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            if (targetFD == -1) { 
-		        printf("cannot open %s for output", cmd->outputFile);
-                fflush(stdout);
-		        exit(1); 
-	        } else {
-                // fd for stdout is 1
-                dup2(targetFD, 1);
-            }
+            redirectOutput(cmd->outputFile);
         }
 
         // Execute program with args, if any
@@ -109,5 +93,29 @@ void printStatus(int status) {
     } else {
         printf("terminated by signal %d\n", status);
         fflush(stdout); 
+    }
+}
+
+void redirectInput(char *file) {
+    int sourceFD = open(file, O_RDONLY);
+    if (sourceFD == -1) { 
+        printf("cannot open %s for input\n", file);
+        fflush(stdout);
+        exit(1); 
+    } else {
+        // fd for stdin is 0
+        dup2(sourceFD, 0);
+    }
+}
+
+void redirectOutput(char *file) {
+    int targetFD = open(file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (targetFD == -1) { 
+        printf("cannot open %s for output\n", file);
+        fflush(stdout);
+        exit(1); 
+    } else {
+        // fd for stdout is 1
+        dup2(targetFD, 1);
     }
 }
