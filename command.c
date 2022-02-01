@@ -66,7 +66,6 @@ struct Command *parseCmd(char *oldLine) {
 
     // Define command struct
     struct Command *newCmd = initCmd();
-    int argIndex = 0;
 
     // Strip newline from fgets(), maintain null-terminator
     oldLine[strlen(oldLine)-1] = '\0';
@@ -96,24 +95,22 @@ struct Command *parseCmd(char *oldLine) {
                 strcpy(newCmd->outputFile, token);
             // [arg 1, arg2, ...]
             } else if (strcmp(token, "&") != 0){
-                newCmd->args[argIndex] = calloc(strlen(token)+1, sizeof(char));
-                strcpy(newCmd->args[argIndex], token);
+                newCmd->args[newCmd->nArgs] = calloc(strlen(token)+1, sizeof(char));
+                strcpy(newCmd->args[newCmd->nArgs], token);
                 newCmd->nArgs++;
-                argIndex++;
             // Potential [&] arg
             } else {
                 newCmd->bg = 1;
+                char *regular = "&";
+                newCmd->args[newCmd->nArgs] = calloc(strlen(regular)+1, sizeof(char));
+                strcpy(newCmd->args[newCmd->nArgs], regular);
+                newCmd->nArgs++;
             }
             // Check for EOF
             token = strsep(&line, " ");
-            // Reset bg if not EOF, add to arg array
+            // Reset bg if not EOF
             if (token != NULL && newCmd->bg == 1) {
-                char *regular = "&";
                 newCmd->bg = 0;
-                newCmd->args[argIndex] = calloc(strlen(regular)+1, sizeof(char));
-                strcpy(newCmd->args[argIndex], regular);
-                newCmd->nArgs++;
-                argIndex++;
             }
         }
     }
@@ -130,6 +127,9 @@ void printCmd(struct Command *cmd) {
         printf("Cmd %s of len %zu\n", cmd->cmd, strlen(cmd->cmd));
         fflush(stdout);
     }
+
+    printf("%d args passed\n", cmd->nArgs);
+    fflush(stdout);
 
     for (int i = 0; i < MAXARGS_CMD; i++) {
         if (cmd->args[i] != NULL) {
