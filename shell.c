@@ -13,26 +13,22 @@ void changeDir(char *path) {
     }
 }
 
-int execCmd(struct Command *cmd, int status) {
-    if (cmd->cmd != NULL) {
-        // Built-in "exit"
-        if (strcmp(cmd->cmd, "exit") == 0) {
-            exitBackground();
-        // Built-in "status"
-        } else if (strcmp(cmd->cmd, "status") == 0) {
-            printStatus(status);
-        // Built-in "cd"
-        } else if (strcmp(cmd->cmd, "cd") == 0) {
-            changeDir(cmd->args[0]);
-        // Other commands
-        } else {
-            status = execOther(cmd, status);
-        }
+int execCmd(struct Command *cmd, int status, pid_t *bgProcs) {
+    // Built-in "status"
+    if (strcmp(cmd->cmd, "status") == 0) {
+        printStatus(status);
+    // Built-in "cd"
+    } else if (strcmp(cmd->cmd, "cd") == 0) {
+        changeDir(cmd->args[0]);
+    // Other commands
+    } else {
+        status = execOther(cmd, status, bgProcs);
     }
+
     return status;
 }
 
-int execOther(struct Command *cmd, int status) {
+int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
     // Build argv vector
     char *newargv[(cmd->nArgs)+2];
     newargv[0] = cmd->cmd;
@@ -51,7 +47,7 @@ int execOther(struct Command *cmd, int status) {
         perror("fork() failed!");
         exit(1);
         break;
-    // spawnpid is 0 in child
+    // childPid is 0 in child
     case 0:
         // Handle input redirection
         if (cmd->inputFile != NULL) {
@@ -76,8 +72,13 @@ int execOther(struct Command *cmd, int status) {
         printf("%s: no such file or directory\n", newargv[0]);
         exit(1);
         break;
-    // spawnpid is child's pid in parent
+    // childPid is child's pid in parent
     default:
+        // Add childPid to list of bg processes
+        for (int i = 0; i < MAX_BGPROCS; i ++) {
+
+        }
+
         // Run as foreground process
         if (!cmd->bg) {
             waitpid(childPid, &childStatus, 0);
@@ -100,9 +101,11 @@ int execOther(struct Command *cmd, int status) {
     return status;
 }
 
-void exitBackground(void) {
-    // Terminate every process in group, including parent process
-    kill(0, SIGTERM);
+void exitBackground(pid_t *bgProcs) {
+
+
+    // Terminate running child process
+
 }
 
 void printStatus(int status) {

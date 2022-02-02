@@ -1,21 +1,23 @@
 #include "command.h"
 
 void destroyCmd(struct Command *oldCmd) {
-    if (oldCmd->cmd != NULL) {
-        free(oldCmd->cmd);
-    }
-    for (int i = 0; i < MAXARGS_CMD; i++) {
-        if (oldCmd->args[i] != NULL) {
-            free(oldCmd->args[i]);
+    if (oldCmd != NULL) {
+        if (oldCmd->cmd != NULL) {
+            free(oldCmd->cmd);
         }
+        for (int i = 0; i < MAXARGS_CMD; i++) {
+            if (oldCmd->args[i] != NULL) {
+                free(oldCmd->args[i]);
+            }
+        }
+        if (oldCmd->inputFile != NULL) {
+            free(oldCmd->inputFile);
+        }
+        if (oldCmd->outputFile != NULL) {
+            free(oldCmd->outputFile);
+        }
+        free(oldCmd);
     }
-    if (oldCmd->inputFile != NULL) {
-        free(oldCmd->inputFile);
-    }
-    if (oldCmd->outputFile != NULL) {
-        free(oldCmd->outputFile);
-    }
-    free(oldCmd);
 }
 
 void expandDoubleDollar(char *line, char *res){
@@ -25,7 +27,7 @@ void expandDoubleDollar(char *line, char *res){
     // Convert pid to a string
     pid_t processId = getpid();
     int len = snprintf(NULL, 0, "%d", processId);
-    char *pidString = malloc(len+1);
+    char *pidString = calloc(len+1, sizeof(char));
     snprintf(pidString, len+1, "%d", processId);
 
     while (i < lineLen && strlen(res) < MAXLEN_CMD) {
@@ -45,7 +47,7 @@ void expandDoubleDollar(char *line, char *res){
 }
 
 struct Command *initCmd(void) {
-    struct Command *newCmd = malloc(sizeof(struct Command));
+    struct Command *newCmd = calloc(1, sizeof(struct Command));
 
     newCmd->cmd = NULL;
     // Initialize to array of NULL char pointers
