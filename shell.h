@@ -11,10 +11,11 @@
 
 /* Function declarations */
 void changeDir(char *);
-int execCmd(struct Command *, int, pid_t *);
-int execOther(struct Command *, int, pid_t *);
+void checkBgChild(int *);
+int *execCmd(struct Command *, int *, pid_t *);
+int *execOther(struct Command *, int *, pid_t *);
 void exitBackground(pid_t *);
-void printStatus(int);
+void printStatus(int *);
 void redirectIO(char *, int);
 
 #endif

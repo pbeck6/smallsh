@@ -13,7 +13,25 @@ void changeDir(char *path) {
     }
 }
 
-int execCmd(struct Command *cmd, int status, pid_t *bgProcs) {
+void checkBgChild(int *status) {
+    int termStatus;
+    pid_t termChild = waitpid(-1, &termStatus, WNOHANG);
+    if (termChild > 0) {
+        // Set child's termination status
+        if( WIFEXITED(termStatus) ){
+            *status = WEXITSTATUS(termStatus);
+        } else {
+            *status = WTERMSIG(termStatus);
+        }
+
+        // Display message before cmd prompt
+        printf("background pid %d is done: ", termChild);
+        fflush(stdout);
+        printStatus(status);
+    }
+}
+
+int *execCmd(struct Command *cmd, int *status, pid_t *bgProcs) {
     // Built-in "status"
     if (strcmp(cmd->cmd, "status") == 0) {
         printStatus(status);
@@ -28,7 +46,7 @@ int execCmd(struct Command *cmd, int status, pid_t *bgProcs) {
     return status;
 }
 
-int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
+int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
     // Build argv vector
     char *newargv[(cmd->nArgs)+2];
     newargv[0] = cmd->cmd;
@@ -85,12 +103,14 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
 
             // Set child's termination status
             if( WIFEXITED(childStatus) ){
-                status = WEXITSTATUS(childStatus);
+                *status = WEXITSTATUS(childStatus);
             } else {
-                status = WTERMSIG(childStatus);
+                *status = WTERMSIG(childStatus);
             }
         // Run as background process
         } else {
+            printf("background pid is %d\n", childPid);
+            fflush(stdout);
             // Add childPid to list of bg processes
             for (int i = 0; i < MAX_BGPROCS; i++) {
                 if (bgProcs[i] == EMPTY_BGPROC) {
@@ -121,12 +141,12 @@ void exitBackground(pid_t *bgProcs) {
     }
 }
 
-void printStatus(int status) {
-    if (status == 0 || status == 1) {
-        printf("exit value %d\n", status);
+void printStatus(int *status) {
+    if (*status == 0 || *status == 1) {
+        printf("exit value %d\n", *status);
         fflush(stdout);
     } else {
-        printf("terminated by signal %d\n", status);
+        printf("terminated by signal %d\n", *status);
         fflush(stdout); 
     }
 }

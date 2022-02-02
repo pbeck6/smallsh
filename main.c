@@ -1,7 +1,8 @@
 #include "shell.h"
 
 int main() {
-    int status = 0;
+    int x = 0;
+    int *status = &x;
     char *prompt = ": ";
     char *line = NULL;
     
@@ -11,11 +12,14 @@ int main() {
         bgProcs[i] = EMPTY_BGPROC;
     }
 
-    // Run until "exit" cmd
-    while (status != -999) {
+    // Run until "exit" cmd, recycle EMPTY_BGPROC as exit condition
+    while (*status != EMPTY_BGPROC) {
         // Set up buffer and command struct
         char *cmdBuffer = calloc(MAXLEN_CMD+2, sizeof(char));
         struct Command *newCmd = NULL;
+
+        // Check for terminated bg process
+        checkBgChild(status);
 
         // Display command prompt
         printf("%s", prompt);
@@ -28,7 +32,8 @@ int main() {
             if (newCmd->cmd != NULL) {
                 // Built-in "exit"
                 if (strcmp(newCmd->cmd, "exit") == 0) {
-                    status = -999;
+                    // Set status to exit condition
+                    *status = EMPTY_BGPROC;
                 // Execute non-exit command
                 } else {
                     status = execCmd(newCmd, status, bgProcs);
