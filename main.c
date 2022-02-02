@@ -19,7 +19,7 @@ int main() {
         struct Command *newCmd = NULL;
 
         // Check for terminated bg process
-        checkBgChild(status);
+        checkBgChild(status, bgProcs);
 
         // Display command prompt
         printf("%s", prompt);

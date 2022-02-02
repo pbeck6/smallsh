@@ -11,7 +11,7 @@
 
 /* Function declarations */
 void changeDir(char *);
-void checkBgChild(int *);
+void checkBgChild(int *, pid_t *);
 int *execCmd(struct Command *, int *, pid_t *);
 int *execOther(struct Command *, int *, pid_t *);
 void exitBackground(pid_t *);

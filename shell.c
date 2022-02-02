@@ -13,10 +13,17 @@ void changeDir(char *path) {
     }
 }
 
-void checkBgChild(int *status) {
+void checkBgChild(int *status, pid_t *bgProcs) {
     int termStatus;
     pid_t termChild = waitpid(-1, &termStatus, WNOHANG);
     if (termChild > 0) {
+        // Remove child from bg proc array
+        for (int i = 0; i < MAX_BGPROCS; i++) {
+            if (bgProcs[i] == termChild) {
+                bgProcs[i] = EMPTY_BGPROC;
+                break;
+            }
+        }
         // Set child's termination status
         if( WIFEXITED(termStatus) ){
             *status = WEXITSTATUS(termStatus);
@@ -63,6 +70,7 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
     switch (childPid){
     case -1:
         perror("fork() failed!");
+        fflush(stderr);
         exit(1);
         break;
     // childPid is 0 in child
