@@ -38,7 +38,7 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
     }
 
     // Code modified from Module: Exec a New Program
- 	int   childStatus;
+ 	int childStatus;
 	pid_t childPid = fork();
     char *nullFile = "/dev/null";
 
@@ -74,11 +74,6 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
         break;
     // childPid is child's pid in parent
     default:
-        // Add childPid to list of bg processes
-        for (int i = 0; i < MAX_BGPROCS; i ++) {
-            //////////////////////////
-        }
-
         // Run as foreground process
         if (!cmd->bg) {
             waitpid(childPid, &childStatus, 0);
@@ -94,6 +89,15 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
             } else {
                 status = WTERMSIG(childStatus);
             }
+        // Run as background process
+        } else {
+            // Add childPid to list of bg processes
+            for (int i = 0; i < MAX_BGPROCS; i++) {
+                if (bgProcs[i] == EMPTY_BGPROC) {
+                    bgProcs[i] = childPid;
+                    break;
+                }
+            }
         }
         
         break;
@@ -102,10 +106,19 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
 }
 
 void exitBackground(pid_t *bgProcs) {
-
-    ///////////////////////////////////
-    // Terminate running child process
-
+    // Find any remaining bg processes
+    for (int i = 0; i < MAX_BGPROCS; i++) {
+        if (bgProcs[i] != EMPTY_BGPROC) {
+            // Terminate still-running bg proc
+            if( kill(bgProcs[i], 0) == 0 ) {
+                kill(bgProcs[i], SIGTERM);
+                ////////////////////////////////////////////////// DELETE
+                printf("success terming child %d at index %d\n", bgProcs[i], i);
+                fflush(stdout);
+                ////////////////////////////////////////////////// DELETE
+            }
+        }
+    }
 }
 
 void printStatus(int status) {

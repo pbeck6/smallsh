@@ -8,7 +8,7 @@ int main() {
     // Set non-valid PID to -999
     pid_t bgProcs[MAX_BGPROCS];
     for (int i = 0; i < MAX_BGPROCS; i ++) {
-        bgProcs[i] = -999;
+        bgProcs[i] = EMPTY_BGPROC;
     }
 
     // Run until "exit" cmd
@@ -43,7 +43,7 @@ int main() {
 
     // Clean up background processes
     exitBackground(bgProcs);
-    
+
     return EXIT_SUCCESS;
 }
 //

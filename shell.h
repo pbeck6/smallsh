@@ -7,6 +7,7 @@
 
 /* Macros */
 #define MAX_BGPROCS 100
+#define EMPTY_BGPROC -999
 
 /* Function declarations */
 void changeDir(char *);
