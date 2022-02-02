@@ -76,7 +76,7 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
     default:
         // Add childPid to list of bg processes
         for (int i = 0; i < MAX_BGPROCS; i ++) {
-
+            //////////////////////////
         }
 
         // Run as foreground process
@@ -103,7 +103,7 @@ int execOther(struct Command *cmd, int status, pid_t *bgProcs) {
 
 void exitBackground(pid_t *bgProcs) {
 
-
+    ///////////////////////////////////
     // Terminate running child process
 
 }

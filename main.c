@@ -41,7 +41,9 @@ int main() {
         free(cmdBuffer);
     }
 
+    // Clean up background processes
     exitBackground(bgProcs);
+    
     return EXIT_SUCCESS;
 }
 //
