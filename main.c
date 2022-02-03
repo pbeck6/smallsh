@@ -7,10 +7,14 @@ int main() {
     char *line = NULL;
 
     // Code modified from Exploration: Sig Handling API
-    struct sigaction SIGINT_action = { {0} };
-    SIGINT_action.sa_handler = SIG_IGN;
-    sigfillset(&SIGINT_action.sa_mask);
-	SIGINT_action.sa_flags = 0;
+    struct sigaction SIG_parent = { {0} };
+    SIG_parent.sa_handler = SIG_IGN;
+    sigfillset(&SIG_parent.sa_mask);
+    SIG_parent.sa_flags = 0;
+    sigaction(SIGINT, &SIG_parent, NULL);
+
+    // Set handler for SIGTSTP (foreground-only mode)
+	SIG_parent.sa_handler = foregroundOnly;
     
     // Set non-valid PID to -999
     pid_t bgProcs[MAX_BGPROCS];
@@ -20,8 +24,8 @@ int main() {
 
     // Run until "exit" cmd, recycle EMPTY_BGPROC as exit condition
     while (*status != EMPTY_BGPROC) {
-        // Reset SIGINT handler to SIG_IGN
-        sigaction(SIGINT, &SIGINT_action, NULL);
+        // Reset SIGTSTP handler
+        sigaction(SIGTSTP, &SIG_parent, NULL);
 
         // Set up buffer and command struct
         char *cmdBuffer = calloc(MAXLEN_CMD+2, sizeof(char));

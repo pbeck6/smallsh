@@ -16,6 +16,7 @@ void checkBgChild(int *, pid_t *);
 int *execCmd(struct Command *, int *, pid_t *);
 int *execOther(struct Command *, int *, pid_t *);
 void exitBackground(pid_t *);
+void foregroundOnly(int);
 void printStatus(int *);
 void redirectIO(char *, int);
 

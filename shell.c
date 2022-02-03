@@ -62,85 +62,88 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
         newargv[i+1] = cmd->args[i];
     }
 
-    // Build SIGINT handler
-    struct sigaction SIGINT_child = { {0} };
-    SIGINT_child.sa_handler = SIG_DFL;
-    sigfillset(&SIGINT_child.sa_mask);
-    SIGINT_child.sa_flags = 0;
+    // Build and set SIGTSTP handler
+    struct sigaction SIG_child = { {0} };
+    SIG_child.sa_handler = SIG_IGN;
+    sigfillset(&SIG_child.sa_mask);
+    SIG_child.sa_flags = 0;
+    sigaction(SIGTSTP, &SIG_child, NULL);
+
+    // Set SIGINT handler
+    SIG_child.sa_handler = SIG_DFL;
 
     // Code modified from Module: Exec a New Program
  	int childStatus;
 	pid_t childPid = fork();
     char *nullFile = "/dev/null";
 
-    switch (childPid){
-    case -1:
-        perror("fork() failed!");
-        fflush(stderr);
-        exit(1);
-        break;
-    // childPid is 0 in child
-    case 0:
-        // Handle input redirection
-        if (cmd->inputFile != NULL) {
-            redirectIO(cmd->inputFile, 0);
-        } else if (cmd->inputFile == NULL && cmd->bg == 1) {
-            // Default input for bg proc
-            redirectIO(nullFile, 0);
-        }
-
-        // Handle output redirection
-        if (cmd->outputFile != NULL) {
-            redirectIO(cmd->outputFile, 1);
-        } else if (cmd->outputFile == NULL && cmd->bg == 1) {
-            // Default output for bg proc
-            redirectIO(nullFile, 1);
-        }
-
-        // Set foreground to terminate on SIGINT
-        if (!cmd->bg) {
-            sigaction(SIGINT, &SIGINT_child, NULL);
-        }
-
-        // Execute program with args, if any
-        execvp(newargv[0], newargv);
-
-        // execv() returns only on error
-        printf("%s: no such file or directory\n", newargv[0]);
-        exit(1);
-        break;
-    // childPid is child's pid in parent
-    default:
-        // Run as foreground process
-        if (!cmd->bg) {
-            waitpid(childPid, &childStatus, 0);
-
-            ////////////////////////////////////////////////// DELETE
-            printf("Parent %d: child pid %d in group %d exited\n", getpid(), childPid, getpgrp());
-            fflush(stdout);
-            ////////////////////////////////////////////////// DELETE
-
-            // Set child's termination status
-            if( WIFEXITED(childStatus) ){
-                *status = WEXITSTATUS(childStatus);
-            } else {
-                *status = WTERMSIG(childStatus);
-                printStatus(status);
+    switch (childPid) {
+        case -1:
+            perror("fork() failed!");
+            fflush(stderr);
+            exit(1);
+            break;
+        // childPid is 0 in child
+        case 0:
+            // Handle input redirection
+            if (cmd->inputFile != NULL) {
+                redirectIO(cmd->inputFile, 0);
+            } else if (cmd->inputFile == NULL && cmd->bg == 1) {
+                // Default input for bg proc
+                redirectIO(nullFile, 0);
             }
-        // Run as background process
-        } else {
-            printf("background pid is %d\n", childPid);
-            fflush(stdout);
-            // Add childPid to list of bg processes
-            for (int i = 0; i < MAX_BGPROCS; i++) {
-                if (bgProcs[i] == EMPTY_BGPROC) {
-                    bgProcs[i] = childPid;
-                    break;
+
+            // Handle output redirection
+            if (cmd->outputFile != NULL) {
+                redirectIO(cmd->outputFile, 1);
+            } else if (cmd->outputFile == NULL && cmd->bg == 1) {
+                // Default output for bg proc
+                redirectIO(nullFile, 1);
+            }
+
+            // Set fg to terminate on SIGINT
+            if (!cmd->bg) {
+                sigaction(SIGINT, &SIG_child, NULL);
+            }
+            
+            execvp(newargv[0], newargv);
+    
+            // execv() returns only on error
+            printf("%s: no such file or directory\n", newargv[0]);
+            exit(1);
+            break;
+        // childPid is child's pid in parent
+        default:
+            // Run as foreground process
+            if (!cmd->bg) {
+                waitpid(childPid, &childStatus, 0);
+
+                ////////////////////////////////////////////////// DELETE
+                printf("Parent %d: child pid %d in group %d exited\n", getpid(), childPid, getpgrp());
+                fflush(stdout);
+                ////////////////////////////////////////////////// DELETE
+
+                // Set child's termination status
+                if( WIFEXITED(childStatus) ){
+                    *status = WEXITSTATUS(childStatus);
+                } else {
+                    *status = WTERMSIG(childStatus);
+                    printStatus(status);
+                }
+            // Run as background process
+            } else {
+                printf("background pid is %d\n", childPid);
+                fflush(stdout);
+                // Add childPid to list of bg processes
+                for (int i = 0; i < MAX_BGPROCS; i++) {
+                    if (bgProcs[i] == EMPTY_BGPROC) {
+                        bgProcs[i] = childPid;
+                        break;
+                    }
                 }
             }
-        }
-        
-        break;
+            
+            break;
     }
     return status;
 }
@@ -159,6 +162,11 @@ void exitBackground(pid_t *bgProcs) {
             }
         }
     }
+}
+
+void foregroundOnly(int signo) {
+	char* message = "Entering foreground-only mode (& is now ignored)\n";
+	write(STDOUT_FILENO, message, 49);
 }
 
 void printStatus(int *status) {
