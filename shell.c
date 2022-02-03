@@ -118,11 +118,6 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
             if (!cmd->bg) {
                 waitpid(childPid, &childStatus, 0);
 
-                ////////////////////////////////////////////////// DELETE
-                printf("Parent %d: child pid %d in group %d exited\n", getpid(), childPid, getpgrp());
-                fflush(stdout);
-                ////////////////////////////////////////////////// DELETE
-
                 // Set child's termination status
                 if( WIFEXITED(childStatus) ){
                     *status = WEXITSTATUS(childStatus);
@@ -155,18 +150,9 @@ void exitBackground(pid_t *bgProcs) {
             // Terminate still-running bg proc
             if( kill(bgProcs[i], 0) == 0 ) {
                 kill(bgProcs[i], SIGTERM);
-                ////////////////////////////////////////////////// DELETE
-                printf("success terming child %d at index %d\n", bgProcs[i], i);
-                fflush(stdout);
-                ////////////////////////////////////////////////// DELETE
             }
         }
     }
-}
-
-void foregroundOnly(int signo) {
-	char* message = "Entering foreground-only mode (& is now ignored)\n";
-	write(STDOUT_FILENO, message, 49);
 }
 
 void printStatus(int *status) {

@@ -116,9 +116,6 @@ struct Command *parseCmd(char *oldLine) {
             }
         }
     }
-    ////////////////////////////////DELETE
-    printCmd(newCmd);
-
     // Free buffer
     free(line);
     

@@ -1,5 +1,12 @@
 #include "shell.h"
 
+/* Atomic for sig handler */
+volatile sig_atomic_t flag = 0;
+
+/* Function declarations */
+void foregroundOn(int);
+void foregroundOff(int);
+
 int main() {
     int x = 0;
     int *status = &x;
@@ -12,9 +19,6 @@ int main() {
     sigfillset(&SIG_parent.sa_mask);
     SIG_parent.sa_flags = 0;
     sigaction(SIGINT, &SIG_parent, NULL);
-
-    // Set handler for SIGTSTP (foreground-only mode)
-	SIG_parent.sa_handler = foregroundOnly;
     
     // Set non-valid PID to -999
     pid_t bgProcs[MAX_BGPROCS];
@@ -25,6 +29,11 @@ int main() {
     // Run until "exit" cmd, recycle EMPTY_BGPROC as exit condition
     while (*status != EMPTY_BGPROC) {
         // Reset SIGTSTP handler
+        if (!flag) {
+	        SIG_parent.sa_handler = foregroundOn;
+        } else {
+            SIG_parent.sa_handler = foregroundOff;
+        }
         sigaction(SIGTSTP, &SIG_parent, NULL);
 
         // Set up buffer and command struct
@@ -49,6 +58,10 @@ int main() {
                     *status = EMPTY_BGPROC;
                 // Execute non-exit command
                 } else {
+                    // Check for foreground-only mode
+                    if (flag) {
+                        newCmd->bg = 0;
+                    }
                     status = execCmd(newCmd, status, bgProcs);
                 }
             }
@@ -63,5 +76,17 @@ int main() {
     exitBackground(bgProcs);
 
     return EXIT_SUCCESS;
+}
+
+void foregroundOn(int signo) {
+    flag = 1;
+	char* message = "\nEntering foreground-only mode (& is now ignored)\n";
+	write(STDOUT_FILENO, message, 50);
+}
+
+void foregroundOff(int signo) {
+    flag = 0;
+	char* message = "\nExiting foreground-only mode\n";
+	write(STDOUT_FILENO, message, 30);
 }
 //
