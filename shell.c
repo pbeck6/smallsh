@@ -15,26 +15,28 @@ void changeDir(char *path) {
 
 void checkBgChild(int *status, pid_t *bgProcs) {
     int termStatus;
-    pid_t termChild = waitpid(-1, &termStatus, WNOHANG);
-    if (termChild > 0) {
-        // Remove child from bg proc array
-        for (int i = 0; i < MAX_BGPROCS; i++) {
-            if (bgProcs[i] == termChild) {
+    pid_t termChild;
+
+    for (int i = 0; i < MAX_BGPROCS; i++) {
+        if (bgProcs[i] != EMPTY_BGPROC) {
+            termChild = waitpid(bgProcs[i], &termStatus, WNOHANG);
+            if (termChild > 0) {
+                // Remove child from bg proc array
                 bgProcs[i] = EMPTY_BGPROC;
-                break;
+                
+                // Set child's termination status
+                if( WIFEXITED(termStatus) ){
+                    *status = WEXITSTATUS(termStatus);
+                } else {
+                    *status = WTERMSIG(termStatus);
+                }
+
+                // Display message before cmd prompt
+                printf("background pid %d is done: ", termChild);
+                fflush(stdout);
+                printStatus(status);
             }
         }
-        // Set child's termination status
-        if( WIFEXITED(termStatus) ){
-            *status = WEXITSTATUS(termStatus);
-        } else {
-            *status = WTERMSIG(termStatus);
-        }
-
-        // Display message before cmd prompt
-        printf("background pid %d is done: ", termChild);
-        fflush(stdout);
-        printStatus(status);
     }
 }
 
