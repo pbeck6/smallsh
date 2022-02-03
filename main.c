@@ -86,6 +86,8 @@ void foregroundOn(int signo) {
 
 void foregroundOff(int signo) {
     flag = 0;
+    // Wait for last foreground process, if any
+    wait(NULL);
 	char* message = "\nExiting foreground-only mode\n";
 	write(STDOUT_FILENO, message, 30);
 }
