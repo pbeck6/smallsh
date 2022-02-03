@@ -62,6 +62,12 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
         newargv[i+1] = cmd->args[i];
     }
 
+    // Build SIGINT handler
+    struct sigaction SIGINT_child = { {0} };
+    SIGINT_child.sa_handler = SIG_DFL;
+    sigfillset(&SIGINT_child.sa_mask);
+    SIGINT_child.sa_flags = 0;
+
     // Code modified from Module: Exec a New Program
  	int childStatus;
 	pid_t childPid = fork();
@@ -91,6 +97,11 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
             redirectIO(nullFile, 1);
         }
 
+        // Set foreground to terminate on SIGINT
+        if (!cmd->bg) {
+            sigaction(SIGINT, &SIGINT_child, NULL);
+        }
+
         // Execute program with args, if any
         execvp(newargv[0], newargv);
 
@@ -114,6 +125,7 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
                 *status = WEXITSTATUS(childStatus);
             } else {
                 *status = WTERMSIG(childStatus);
+                printStatus(status);
             }
         // Run as background process
         } else {

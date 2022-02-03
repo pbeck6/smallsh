@@ -4,9 +4,10 @@
 /* Processes functionality */
 #include "command.h"
 #include <sys/wait.h>
+#include <signal.h>
 
 /* Macros */
-#define MAX_BGPROCS 100
+#define MAX_BGPROCS 200
 #define EMPTY_BGPROC -999
 
 /* Function declarations */

@@ -5,6 +5,12 @@ int main() {
     int *status = &x;
     char *prompt = ": ";
     char *line = NULL;
+
+    // Code modified from Exploration: Sig Handling API
+    struct sigaction SIGINT_action = { {0} };
+    SIGINT_action.sa_handler = SIG_IGN;
+    sigfillset(&SIGINT_action.sa_mask);
+	SIGINT_action.sa_flags = 0;
     
     // Set non-valid PID to -999
     pid_t bgProcs[MAX_BGPROCS];
@@ -14,6 +20,9 @@ int main() {
 
     // Run until "exit" cmd, recycle EMPTY_BGPROC as exit condition
     while (*status != EMPTY_BGPROC) {
+        // Reset SIGINT handler to SIG_IGN
+        sigaction(SIGINT, &SIGINT_action, NULL);
+
         // Set up buffer and command struct
         char *cmdBuffer = calloc(MAXLEN_CMD+2, sizeof(char));
         struct Command *newCmd = NULL;
