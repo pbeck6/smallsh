@@ -1,5 +1,8 @@
 #include "shell.h"
 
+/* Change current directory to that of "path"
+*  Change to HOME if no "path" specified
+*/
 void changeDir(char *path) {
     // New dir specified
     if (path != NULL) {
@@ -13,11 +16,17 @@ void changeDir(char *path) {
     }
 }
 
+/* Check PIDs from array "bgProcs" for status change
+*  Remove finished PIDs from "bgProcs" and then
+*  set status in int ptr "status"
+*/
 void checkBgChild(int *status, pid_t *bgProcs) {
     int termStatus;
     pid_t termChild;
 
+    // Check array of PIDs
     for (int i = 0; i < MAX_BGPROCS; i++) {
+        // Check whether valid PID has status change
         if (bgProcs[i] != EMPTY_BGPROC) {
             termChild = waitpid(bgProcs[i], &termStatus, WNOHANG);
             if (termChild > 0) {
@@ -40,6 +49,10 @@ void checkBgChild(int *status, pid_t *bgProcs) {
     }
 }
 
+/* Execute built-in cmds "status" and "cd"
+*  If other cmd, pass bgProcs array and "status" ptr
+*  to execOther() and update status to return
+*/
 int *execCmd(struct Command *cmd, int *status, pid_t *bgProcs) {
     // Built-in "status"
     if (strcmp(cmd->cmd, "status") == 0) {
@@ -55,6 +68,10 @@ int *execCmd(struct Command *cmd, int *status, pid_t *bgProcs) {
     return status;
 }
 
+/* Execute non-built-in cmds as either foreground or background
+*  waitpid() only runs on fg procs set in Command struct "bg" attribute
+*  Update "status" ptr and return ptr
+*/
 int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
     // Build argv vector
     char *newargv[(cmd->nArgs)+2];
@@ -120,7 +137,7 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
         exit(1);
     // childPid is child's pid in parent
     } else {
-        // Run as foreground process
+        // After running as foreground process
         if (!cmd->bg) {
             waitpid(childPid, &childStatus, 0);
 
@@ -135,11 +152,11 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
             // Unblock any SIGTSTP blocked by fg process
             sigprocmask(SIG_UNBLOCK, &mask, NULL);
 
-        // Run as background process
+        // After running as background process
         } else {
             printf("background pid is %d\n", childPid);
             fflush(stdout);
-            // Add childPid to list of bg processes
+            // Add childPid to list of bg processes in empty index
             for (int i = 0; i < MAX_BGPROCS; i++) {
                 if (bgProcs[i] == EMPTY_BGPROC) {
                     bgProcs[i] = childPid;
@@ -151,6 +168,9 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
     return status;
 }
 
+/* Search "bgProcs" array for any still-running bg procs to terminate
+*  Only runs before smallsh exits
+*/
 void exitBackground(pid_t *bgProcs) {
     // Find any remaining bg processes
     for (int i = 0; i < MAX_BGPROCS; i++) {
@@ -163,6 +183,9 @@ void exitBackground(pid_t *bgProcs) {
     }
 }
 
+/* 
+*  Print exit value held by int ptr "status"
+*/
 void printStatus(int *status) {
     if (*status == 0 || *status == 1) {
         printf("exit value %d\n", *status);
@@ -173,6 +196,9 @@ void printStatus(int *status) {
     }
 }
 
+/* 
+*  Redirect I/O from stdin/stdout to a valid file
+*/
 void redirectIO(char *file, int std) {
     char *message = NULL;
     int openFD;

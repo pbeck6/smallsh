@@ -8,8 +8,10 @@ void foregroundOn(int);
 void foregroundOff(int);
 
 int main() {
+    // Int to hold exit value of commands
     int x = 0;
     int *status = &x;
+    // Char ptrs for prompt and input
     char *prompt = ": ";
     char *line = NULL;
 
@@ -28,7 +30,7 @@ int main() {
 
     // Run until "exit" cmd, recycle EMPTY_BGPROC as exit condition
     while (*status != EMPTY_BGPROC) {
-        // Reset SIGTSTP handler
+        // Reset SIGTSTP handler, turns foreground-only mode ON/OFF
         if (!flag) {
 	        SIG_parent.sa_handler = foregroundOn;
         } else {
@@ -78,12 +80,18 @@ int main() {
     return EXIT_SUCCESS;
 }
 
+/* 
+*  Flag atomic variable will instruct program to ignore '&' arg
+*/
 void foregroundOn(int signo) {
     flag = 1;
 	char* message = "\nEntering foreground-only mode (& is now ignored)\n";
 	write(STDOUT_FILENO, message, 50);
 }
 
+/* 
+*  Flag atomic variable will instruct program to accept '&' arg
+*/
 void foregroundOff(int signo) {
     flag = 0;
 	char* message = "\nExiting foreground-only mode\n";

@@ -1,5 +1,8 @@
 #include "command.h"
 
+/* Destroy Command struct passed by pointer,
+*  freeing heap-allocated memory
+*/
 void destroyCmd(struct Command *oldCmd) {
     if (oldCmd != NULL) {
         if (oldCmd->cmd != NULL) {
@@ -20,6 +23,9 @@ void destroyCmd(struct Command *oldCmd) {
     }
 }
 
+/* Expand $$ variable into current PID,
+*  parsing "line" ptr and output to "res" ptr
+*/
 void expandDoubleDollar(char *line, char *res){
     int i = 0;
     int lineLen = strlen(line);
@@ -46,6 +52,9 @@ void expandDoubleDollar(char *line, char *res){
     free(pidString);
 }
 
+/* Create new Command struct,
+*  initilizing 0 and NULL values
+*/
 struct Command *initCmd(void) {
     struct Command *newCmd = calloc(1, sizeof(struct Command));
 
@@ -62,6 +71,10 @@ struct Command *initCmd(void) {
     return newCmd;
 }
 
+/* Parse "oldLine" string containing cmd and args
+*  into appropriate Command struct
+*  Return Command struct for execution and disposal of allocated mem
+*/
 struct Command *parseCmd(char *oldLine) {
     // Buffer for $$ expanded command str
     char *line = calloc(MAXLEN_CMD+1, sizeof(char));
@@ -122,6 +135,9 @@ struct Command *parseCmd(char *oldLine) {
     return newCmd;
 }
 
+/* 
+*  Output Command struct members to terminal for debugging
+*/
 void printCmd(struct Command *cmd) {
     if (cmd->cmd != NULL) {
         printf("Cmd %s of len %zu\n", cmd->cmd, strlen(cmd->cmd));
