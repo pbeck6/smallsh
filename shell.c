@@ -64,6 +64,14 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
         newargv[i+1] = cmd->args[i];
     }
 
+    // Block SIGTSTP until fg ends
+    sigset_t mask;
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGTSTP);
+    if (!cmd->bg) {
+        sigprocmask(SIG_BLOCK, &mask, NULL);
+    }
+
     // Code modified from Module: Exec a New Program
  	int childStatus;
 	pid_t childPid = fork();
@@ -75,18 +83,18 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
         exit(1);
     // childPid is 0 in child
     } else if (childPid == 0) {
-        // Build and set SIGTSTP handler
         struct sigaction SIG_child = { {0} };
-        SIG_child.sa_handler = SIG_IGN;
         sigfillset(&SIG_child.sa_mask);
         SIG_child.sa_flags = 0;
-        sigaction(SIGTSTP, &SIG_child, NULL);
 
-        // Set SIGINT handler
-        SIG_child.sa_handler = SIG_DFL;
         // Set fg to terminate on SIGINT
         if (!cmd->bg) {
+            SIG_child.sa_handler = SIG_DFL;
             sigaction(SIGINT, &SIG_child, NULL);
+        // Set bg to ignore SIGTSTP
+        } else {
+            SIG_child.sa_handler = SIG_IGN;
+            sigaction(SIGTSTP, &SIG_child, NULL);
         }
 
         // Handle input redirection
@@ -123,6 +131,10 @@ int *execOther(struct Command *cmd, int *status, pid_t *bgProcs) {
                 *status = WTERMSIG(childStatus);
                 printStatus(status);
             }
+
+            // Unblock any SIGTSTP blocked by fg process
+            sigprocmask(SIG_UNBLOCK, &mask, NULL);
+
         // Run as background process
         } else {
             printf("background pid is %d\n", childPid);
