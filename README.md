@@ -60,13 +60,13 @@ background pid is 4941
 : kill -15 4941
 background pid 4941 is done: terminated by signal 15
 : pwd
-/nfs/stak/faculty/b/brewsteb/CS344/prog3
+/nfs/stak/b/documents
 : cd
 : pwd
-/nfs/stak/faculty/b/brewsteb
-: cd CS344
+/nfs/stak/b
+: cd documents
 : pwd
-/nfs/stak/faculty/b/brewsteb/CS344
+/nfs/stak/b/documents
 : echo 4867
 4867
 : echo $$
