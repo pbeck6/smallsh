@@ -1,4 +1,7 @@
-# How to run
+# smallsh
+## Unix shell functionality, written in C
+---
+## How to run
 
 1. On the command line, enter the following: `make`
 
