@@ -2,11 +2,11 @@
 #### *Unix shell functionality, written in C*
 
 ## How to run
-1. On the command line, enter the following: `make`
+1. On the command line, run `make`
 
-   OR, to set additional options, manually compile: `gcc --std=c99 -g -Wall -o smallsh main.c command.c shell.c`
+   OR, to set additional options, manually compile `gcc --std=c99 -g -Wall -o smallsh main.c command.c shell.c`
 
-2. To run the program, enter: `./smallsh`
+2. Run the program with `./smallsh`
 
 ## How to use
 - Run commands as you would on a traditional CLI: `command [arg1 arg2 ...] [< input_file] [> output_file] [&]` where `&` is used to run processes in the background
