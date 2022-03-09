@@ -1,10 +1,7 @@
-# HOW TO RUN
+# How to run
 
-1. On the command line, enter the following:
-    `make`
+1. On the command line, enter the following: `make`
 
-   OR, to set additional options, manually compile:
-    `gcc --std=c99 -g -Wall -o smallsh main.c command.c shell.c`
+   OR, to set additional options, manually compile: `gcc --std=c99 -g -Wall -o smallsh main.c command.c shell.c`
 
-2. To run the program, enter:
-    `./smallsh`
+2. To run the program, enter: `./smallsh`
